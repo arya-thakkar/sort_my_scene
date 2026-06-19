@@ -10,6 +10,7 @@ const eventSchema = new mongoose.Schema(
     description: { type: String, default: "" },
     category: { type: String, default: "General" },
     imageUrl: { type: String, default: "" },
+    ticketPrice: { type: Number, default: 500 },
   },
   { timestamps: true }
 );

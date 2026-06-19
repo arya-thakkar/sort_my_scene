@@ -1,6 +1,11 @@
 import mongoose from "mongoose";
 import Seat from "../models/seat.models.js";
 import Reservation from "../models/reservation.models.js";
+import Booking from "../models/booking.models.js";
+import Event from "../models/event.models.js";
+
+const generateBookingId = () =>
+  "BKG-" + Math.random().toString(36).substring(2, 8).toUpperCase();
 
 export const bookSeats = async (req, res) => {
   const { eventId, seatNumbers } = req.body;
@@ -47,12 +52,24 @@ export const bookSeats = async (req, res) => {
       });
     }
 
+    // Mark seats as booked
     await Seat.updateMany(
       { _id: { $in: reservation.seatIds } },
       { $set: { status: "booked" } },
       { session }
     );
 
+    // Calculate total from seat prices
+    const totalAmount = reservedSeats.reduce((sum, s) => sum + (s.price || 0), 0);
+
+    // Save booking record
+    const bookingId = generateBookingId();
+    const booking = await Booking.create(
+      [{ userId, eventId, seatNumbers, totalAmount, bookingId }],
+      { session }
+    );
+
+    // Remove reservation
     await Reservation.findByIdAndDelete(reservation._id, { session });
 
     await session.commitTransaction();
@@ -61,9 +78,11 @@ export const bookSeats = async (req, res) => {
       success: true,
       message: "Booking confirmed!",
       booking: {
+        bookingId,
         userId,
         eventId,
         seatNumbers,
+        totalAmount,
         bookedAt: new Date(),
       },
     });
@@ -78,5 +97,17 @@ export const bookSeats = async (req, res) => {
     return res.status(500).json({ success: false, message: error.message });
   } finally {
     session.endSession();
+  }
+};
+
+export const getMyBookings = async (req, res) => {
+  try {
+    const bookings = await Booking.find({ userId: req.user._id })
+      .sort({ createdAt: -1 })
+      .populate("eventId", "name venue date imageUrl category ticketPrice");
+
+    return res.status(200).json({ success: true, bookings });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
   }
 };

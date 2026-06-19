@@ -2,11 +2,16 @@ import Event from "../models/event.models.js";
 import Seat from "../models/seat.models.js";
 import Reservation from "../models/reservation.models.js";
 
-const generateSeatDocs = (eventId, rows, cols) => {
+const generateSeatDocs = (eventId, rows, cols, basePrice) => {
   const seats = [];
   for (const row of rows) {
     for (let col = 1; col <= cols; col++) {
-      seats.push({ eventId, seatNumber: `${row}${col}`, status: "available" });
+      seats.push({ 
+        eventId, 
+        seatNumber: `${row}${col}`, 
+        status: "available",
+        price: basePrice 
+      });
     }
   }
   return seats;
@@ -36,12 +41,12 @@ export const getEventById = async (req, res) => {
 
 export const createEvent = async (req, res) => {
   try {
-    const { name, date, venue, totalSeats, description, category, rows, cols } = req.body;
+    const { name, date, venue, totalSeats, description, category, rows, cols, ticketPrice } = req.body;
 
-    if (!name || !date || !venue || !totalSeats) {
+    if (!name || !date || !venue) {
       return res.status(400).json({
         success: false,
-        message: "name, date, venue, and totalSeats are required.",
+        message: "name, date, and venue are required.",
       });
     }
 
@@ -50,20 +55,24 @@ export const createEvent = async (req, res) => {
       imageUrl = `${req.protocol}://${req.get("host")}/uploads/${req.file.filename}`;
     }
 
+    const finalPrice = ticketPrice ? Number(ticketPrice) : 500;
+    const seatRows = rows ? JSON.parse(rows) : ["A", "B", "C", "D", "E"];
+    const seatCols = cols ? Number(cols) : 10;
+    const finalTotalSeats = totalSeats ? Number(totalSeats) : seatRows.length * seatCols;
+
     const event = await Event.create({
       name,
       date,
       venue,
-      totalSeats,
+      totalSeats: finalTotalSeats,
       description: description || "",
       category: category || "General",
       imageUrl,
+      ticketPrice: finalPrice,
       ownerId: req.user._id,
     });
 
-    const seatRows = rows ? JSON.parse(rows) : ["A", "B", "C", "D", "E"];
-    const seatCols = cols ? Number(cols) : Math.ceil(totalSeats / seatRows.length);
-    const seatDocs = generateSeatDocs(event._id, seatRows, seatCols);
+    const seatDocs = generateSeatDocs(event._id, seatRows, seatCols, finalPrice);
     await Seat.insertMany(seatDocs);
 
     return res.status(201).json({
@@ -76,6 +85,7 @@ export const createEvent = async (req, res) => {
     return res.status(500).json({ success: false, message: error.message });
   }
 };
+
 
 export const listUserEvents = async (req, res) => {
   try {

@@ -6,8 +6,8 @@ import Seat from "../models/seat.models.js";
 
 dotenv.config();
 
-const ROWS = ["A", "B", "C", "D", "E"];
-const COLS = 10;
+const ROWS = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L"];
+const COLS = 12;
 
 const DUMMY_EVENTS = [
   {
@@ -462,11 +462,10 @@ const DUMMY_EVENTS = [
   },
 ];
 
-const generateSeats = (eventId) => {
+const generateSeats = (eventId, price) => {
   const seats = [];
   for (const row of ROWS) {
     for (let col = 1; col <= COLS; col++) {
-      // Randomly assign status: ~60% available, ~30% booked, ~10% reserved
       const rand = Math.random();
       let status = "available";
       if (rand > 0.9) {
@@ -475,7 +474,7 @@ const generateSeats = (eventId) => {
         status = "booked";
       }
 
-      seats.push({ eventId, seatNumber: `${row}${col}`, status });
+      seats.push({ eventId, seatNumber: `${row}${col}`, status, price });
     }
   }
   return seats;
@@ -489,12 +488,18 @@ const seed = async () => {
   await Seat.deleteMany({});
   console.log("🗑   Cleared existing Events and Seats.\n");
 
-  const events = await Event.insertMany(DUMMY_EVENTS);
+  const eventsWithPrices = DUMMY_EVENTS.map(event => ({
+    ...event,
+    totalSeats: ROWS.length * COLS,
+    ticketPrice: Math.floor(Math.random() * 15 + 5) * 100 // Between 500 and 2000
+  }));
+
+  const events = await Event.insertMany(eventsWithPrices);
   console.log(`✅  Inserted ${events.length} events.\n`);
 
   let totalSeats = 0;
   for (const event of events) {
-    const seats = generateSeats(event._id);
+    const seats = generateSeats(event._id, event.ticketPrice);
     await Seat.insertMany(seats);
     totalSeats += seats.length;
     console.log(`   [${event.category.padEnd(8)}] ${seats.length} seats → "${event.name}"`);
