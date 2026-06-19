@@ -59,8 +59,12 @@ export const bookSeats = async (req, res) => {
       { session }
     );
 
+    // Get the event to use its ticket price as a fallback for legacy seats
+    const event = await Event.findById(eventId).session(session);
+    const fallbackPrice = event?.ticketPrice || 500;
+
     // Calculate total from seat prices
-    const totalAmount = reservedSeats.reduce((sum, s) => sum + (s.price || 0), 0);
+    const totalAmount = reservedSeats.reduce((sum, s) => sum + (s.price || fallbackPrice), 0);
 
     // Save booking record
     const bookingId = generateBookingId();
