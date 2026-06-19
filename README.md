@@ -4,9 +4,8 @@ Sort My Scene is a modern, full-stack event discovery and ticket booking platfor
 
 ## 🔗 Links
 
-- **Live Demo (Frontend)**: [Add Link Here]
-- **API URL (Backend)**: [Add Link Here]
-- **GitHub Repository**: [Add Link Here]
+- **Live Demo (Frontend)**: https://tiny-blancmange-4cd649.netlify.app/
+- **API URL (Backend)**: https://sort-my-scene.onrender.com
 
 ---
 
@@ -100,7 +99,7 @@ npm install
 ```
 - Create a `.env` file in the `frontend` folder with the following:
   ```env
-  VITE_API_URL=http://localhost:5000/api
+  VITE_API_URL=https://sort-my-scene.onrender.com/api
   ```
 - Start the development server:
   ```bash
@@ -112,3 +111,4 @@ npm install
 ## 🤝 Contributing
 Contributions, issues, and feature requests are welcome! 
 Feel free to check [issues page]([Add Link Here]).
+
