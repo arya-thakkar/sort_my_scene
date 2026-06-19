@@ -47,8 +47,8 @@ const CreateEvent = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!form.name || !form.date || !form.venue || !form.ticketPrice) {
-      toast.error('Please fill in all required fields');
+    if (!form.name.trim() || !form.date || !form.venue.trim() || !form.ticketPrice) {
+      toast.error('Please fill in all required fields correctly');
       return;
     }
     if (Number(form.ticketPrice) <= 0) {

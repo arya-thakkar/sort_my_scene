@@ -15,8 +15,8 @@ const Signup = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!name || !email || !password || !confirmPassword) {
-      toast.error('Please fill in all fields');
+    if (!name.trim() || !email.trim() || !password || !confirmPassword) {
+      toast.error('Please fill in all fields correctly');
       return;
     }
 
